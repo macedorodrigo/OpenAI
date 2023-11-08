@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.get("/", (req, res) => res.send("Rodando a plicação"));
+app.get("/", (req, res) => res.send("Rodando aplicação OpenAI!"));
 
 app.post("/ask", async (req, res) => {
   const chatCompletionRequest = {
