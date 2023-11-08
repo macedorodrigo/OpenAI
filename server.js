@@ -1,9 +1,9 @@
+require("dotenv").config();
+
 const cors = require("cors");
 const express = require("express");
 const OpenAI = require("openai");
-const port_server = process.env.PORT_SERVER || 3000;
-
-require("dotenv").config();
+const port = process.env.PORT_SERVER || 3000;
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,27 +16,27 @@ app.use(cors());
 
 app.get("/", (req, res) => res.send("Rodando aplicação OpenAI!"));
 
-app.post("/ask", async (req, res) => {
-  const chatCompletionRequest = {
-    mensagens: [{ papel: "usuário", conteúdo: req.body.prompt }], // Use req.body.prompt para acessar o prompt enviado pelo cliente
-    modelo: "gpt-3.5-turbo",
-  };
+app.post("/ask", (req, res) => {
+  const messages = req.body.messages;
 
-  try {
-    const chatCompletionResponse = await openai.chat.completions.create(
-      chatCompletionRequest
-    );
-
-    // Processe a resposta de conclusão de bate-papo e gere uma resposta para o cliente
-    const resposta = chatCompletionResponse.choices[0].text;
-
-    res.json({ resposta }); // Envia a resposta de volta ao cliente
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ erro: "Ocorreu um erro" });
+  if (!messages) {
+    return res.status(400).json({ erro: "Sem mensagem" });
   }
+
+  openai.chat.completions
+    .create({
+      messages: messages,
+      max_tokens: 4000,
+      model: "gpt-3.5-turbo",
+    })
+    .then((chatCompletion) => {
+      const retorno = chatCompletion.choices[0].message.content;
+      res.status(200).json(retorno);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ erro: error.message });
+    });
 });
 
-app.listen(port_server, () =>
-  console.log(`Servidor ouvindo na porta ${port_server}`)
-);
+app.listen(port, () => console.log(`Servidor ouvindo na porta ${port}`));
